@@ -1,0 +1,21 @@
+[project]
+name = "walkie-ik"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "MonochromePie", email = "popularmmos2548@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "mujoco>=3.15.0",
+    "numpy>=2.5.4",
+    "sympy>=1.14.0",
+]
+
+[project.scripts]
+walkie-ik = "walkie_ik:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
