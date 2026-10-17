@@ -9,6 +9,8 @@ from reference_frame import WORLD, convert_pose, targets_to_world
 # base joint -> base group (as in BimanualIK.step) and top speed when following the manual slider
 BASE_JOINT_GROUPS = {"x": "xy", "y": "xy", "yaw": "yaw", "lift": "lift"}
 MANUAL_BASE_SPEED = {"x": 0.5, "y": 0.5, "yaw": 1.0, "lift": 0.2}     # m/s, rad/s
+# joints whose frames are drawn for each controlled arm; the base joints are drawn if any arm is
+ARM_JOINTS = {side: [f"q_{side[0]}{i}" for i in range(1, 8)] for side in ("left", "right")}
 
 
 def run_control_loop(ik, sim, gui, home_state: dict, ik_rate: float = 100.0) -> None:
@@ -102,6 +104,12 @@ def _update_display(ik, sim, gui, viewer, command, targets, frame):
         frames.append((target.pos, R_target, 0.10, 0.9))      # target: big frame
         pos, R = model_poses[side]
         frames.append((pos, R, 0.06, 0.4))                    # IK model's end effector: small, faint
+
+    if gui.show_joint_frames() and targets:
+        joints = list(BASE_JOINT_GROUPS) + [j for side in targets for j in ARM_JOINTS[side]]
+        for joint in joints:
+            pos, R = sim.joint_frame(joint)
+            frames.append((pos, R, 0.05, 0.8))                # joint frames: smallest
 
     with viewer.lock():
         sim.draw_frames(viewer, frames)

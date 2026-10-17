@@ -28,7 +28,7 @@ class TargetGUI:
     Pop-up window with sliders for the end-effector targets (xyz + roll/pitch/yaw, ZYX) for each arm.
     Runs in the main thread (run()); the control thread talks to it only through
     get_request(), set_status(), take_reset(), set_targets(), take_frame_request(),
-    switch_frame(), set_base_values() and close(), which are thread-safe.
+    switch_frame(), set_base_values(), show_joint_frames() and close(), which are thread-safe.
 
     Targets are given in the selected frame ("world" or "base"). The exact values live in
     self._values, not in the sliders (which clamp to their range), so a frame switch can
@@ -129,8 +129,16 @@ class TargetGUI:
             ttk.Radiobutton(frame_box, text=label, value=name, variable=self._frame_var,
                             command=self._on_frame).grid(row=0, column=col, padx=6, sticky="w")
 
+        # display: draw the frame of every joint of the controlled arms (and the base) in the viewer
+        display_box = ttk.LabelFrame(self.root, text="Display", padding=8)
+        display_box.grid(row=3, column=0, columnspan=len(initial_targets), padx=8, pady=(0, 8), sticky="ew")
+        self._joint_frames = tk.BooleanVar(value=False)
+        self._joint_frames_value = False
+        ttk.Checkbutton(display_box, text="Show joint frames (controlled arms + base)",
+                        variable=self._joint_frames, command=self._on_joint_frames).grid(row=0, column=0, sticky="w")
+
         ttk.Button(self.root, text="Reset all joints to 0", command=self._on_reset).grid(
-            row=3, column=0, columnspan=len(initial_targets), pady=(0, 8))
+            row=4, column=0, columnspan=len(initial_targets), pady=(0, 8))
 
         self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
         self.root.after(100, self._poll)
@@ -189,6 +197,10 @@ class TargetGUI:
             self._frame = frame
             self._status.clear()                      # was in the old frame
             self._new_fields = poses
+
+    def show_joint_frames(self) -> bool:
+        with self._lock:
+            return self._joint_frames_value
 
     def close(self) -> None:
         with self._lock:
@@ -260,6 +272,11 @@ class TargetGUI:
                 widget.state(["!disabled"] if active else ["disabled"])
         with self._lock:
             self._active_value[side] = active
+
+    def _on_joint_frames(self) -> None:
+        show = bool(self._joint_frames.get())
+        with self._lock:
+            self._joint_frames_value = show
 
     def _on_reset(self) -> None:
         with self._lock:

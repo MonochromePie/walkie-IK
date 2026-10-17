@@ -237,4 +237,5 @@ def main():
 
 
 if __name__ == "__main__":
+    # print(ForwardKinematics(left_dh_params, BASE_SYMBOLS + LEFT_ARM_SYMBOLS).transformation_matrix)
     main()

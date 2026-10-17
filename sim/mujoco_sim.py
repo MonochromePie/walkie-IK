@@ -21,9 +21,10 @@ class MujocoSim:
         self.data = mujoco.MjData(self.model)
         self.timestep = self.model.opt.timestep
 
-        self._qpos_adr, self._actuator = {}, {}
+        self._qpos_adr, self._actuator, self._joint_id = {}, {}, {}
         for name in joint_names:
             jid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, JOINT_MAP[name])
+            self._joint_id[name] = jid
             self._qpos_adr[name] = self.model.jnt_qposadr[jid]
             # the actuator whose transmission is this joint
             self._actuator[name] = next(a for a in range(self.model.nu)
@@ -58,6 +59,13 @@ class MujocoSim:
         """(pos [3], R [3x3]) of the gripper TCP body as simulated."""
         b = self._tcp_body[side]
         return self.data.xpos[b].copy(), self.data.xmat[b].reshape(3, 3).copy()
+
+    def joint_frame(self, name: str):
+        """(pos [3], R [3x3]) of a joint as simulated: its anchor point, with the orientation
+        of the body it moves."""
+        jid = self._joint_id[name]
+        body = self.model.jnt_bodyid[jid]
+        return self.data.xanchor[jid].copy(), self.data.xmat[body].reshape(3, 3).copy()
 
     # ---- visualisation ----
 

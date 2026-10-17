@@ -1,2 +1,5 @@
 .vscode/
+.benchmark_results/
+.benchmark_ik.py
+
 
